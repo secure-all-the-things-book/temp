@@ -1,0 +1,16 @@
+<html lang="en">
+<body>
+<script>
+    window.addEventListener('load', async (e) => {
+        const result = await fetch('/gateway/rest')
+        const data = await result.json()
+        console.log(data)
+        document.getElementById('out').innerText = data['name']
+    })
+</script>
+<h1>
+    waiting for a message
+</h1>
+<h1 id="out"></h1>
+</body>
+</html>
