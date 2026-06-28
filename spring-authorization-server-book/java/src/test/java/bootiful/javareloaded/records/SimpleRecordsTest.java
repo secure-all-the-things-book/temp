@@ -28,7 +28,7 @@ class SimpleRecordsTest {
 		Assertions.assertEquals(order1.total(), 74.023);
 		Assertions.assertEquals(customer.name(), "Tammie");
 		Assertions.assertEquals(cos.orders().size(), 2);
-		System.out.println("order components  " +  order1.id() + ':' + order1.total()); // <2>
+		IO.println("order components  " +  order1.id() + ':' + order1.total()); // <2>
 	}
 
 }

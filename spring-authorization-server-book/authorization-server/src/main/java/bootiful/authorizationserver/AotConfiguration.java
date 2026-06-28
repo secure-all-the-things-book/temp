@@ -92,7 +92,7 @@ class AotConfiguration {
                                     return (Module) ctor.newInstance();
                         } //
                         catch (Throwable t) {
-                            System.out.println("couldn't construct and inspect module " + cn.getName());
+                            IO.println("couldn't construct and inspect module " + cn.getName());
                         }
                         return null;
                     })
@@ -154,7 +154,7 @@ class AotConfiguration {
                     }
                 } //
                 catch (Throwable t) {
-                    System.out.println("couldn't register serialization hint for " + typeReference.getName() + ":" + t.getMessage());
+                    IO.println("couldn't register serialization hint for " + typeReference.getName() + ":" + t.getMessage());
                 }
             });
 
