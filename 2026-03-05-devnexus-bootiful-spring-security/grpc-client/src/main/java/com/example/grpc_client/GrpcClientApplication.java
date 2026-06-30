@@ -21,45 +21,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-
 @SpringBootApplication
 public class GrpcClientApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(GrpcClientApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(GrpcClientApplication.class, args);
+	}
 
+	private String token(OAuth2AuthorizedClientManager authorizedClientManager) {
+		if (SecurityContextHolder.getContextHolderStrategy()
+			.getContext()
+			.getAuthentication() instanceof OAuth2AuthenticationToken auth2AuthenticationToken) {
+			var authRequest = OAuth2AuthorizeRequest
+				.withClientRegistrationId(auth2AuthenticationToken.getAuthorizedClientRegistrationId())
+				.principal(auth2AuthenticationToken)
+				.build();
+			var oAuth2AuthorizedClient = authorizedClientManager.authorize(authRequest);
+			return Objects.requireNonNull(oAuth2AuthorizedClient).getAccessToken().getTokenValue();
+		}
+		throw new IllegalStateException("no authentication");
+	}
 
-    private String token(OAuth2AuthorizedClientManager authorizedClientManager) {
-        if (SecurityContextHolder
-                .getContextHolderStrategy()
-                .getContext()
-                .getAuthentication() instanceof OAuth2AuthenticationToken auth2AuthenticationToken) {
-            var authRequest = OAuth2AuthorizeRequest
-                    .withClientRegistrationId(auth2AuthenticationToken.getAuthorizedClientRegistrationId())
-                    .principal(auth2AuthenticationToken)
-                    .build();
-            var oAuth2AuthorizedClient = authorizedClientManager.authorize(authRequest);
-            return Objects.requireNonNull(oAuth2AuthorizedClient)
-                    .getAccessToken().getTokenValue();
-        }
-        throw new IllegalStateException("no authentication");
-    }
-
-
-    @Bean
-    @Lazy
-    GreetingServiceGrpc.GreetingServiceBlockingStub greetingServiceBlockingStub(
-        GrpcChannelFactory channels,
-        OAuth2AuthorizedClientManager authorizedClientManager) {
-        var bearerTokenInterceptor = new BearerTokenAuthenticationInterceptor(() -> token(authorizedClientManager));
-        var options = ChannelBuilderOptions
-                .defaults()
-                .withInterceptors(List.of(bearerTokenInterceptor));
-        var channel = channels.createChannel("localhost:8086", options);
-        return GreetingServiceGrpc.newBlockingStub(channel);
-    }
-
+	@Bean
+	@Lazy
+	GreetingServiceGrpc.GreetingServiceBlockingStub greetingServiceBlockingStub(GrpcChannelFactory channels,
+			OAuth2AuthorizedClientManager authorizedClientManager) {
+		var bearerTokenInterceptor = new BearerTokenAuthenticationInterceptor(() -> token(authorizedClientManager));
+		var options = ChannelBuilderOptions.defaults().withInterceptors(List.of(bearerTokenInterceptor));
+		var channel = channels.createChannel("localhost:8086", options);
+		return GreetingServiceGrpc.newBlockingStub(channel);
+	}
 
 }
 
@@ -67,20 +58,17 @@ public class GrpcClientApplication {
 @ResponseBody
 class GreetingClient {
 
-    private final GreetingServiceGrpc.GreetingServiceBlockingStub client;
+	private final GreetingServiceGrpc.GreetingServiceBlockingStub client;
 
-    GreetingClient(GreetingServiceGrpc.GreetingServiceBlockingStub client) {
-        this.client = client;
-    }
+	GreetingClient(GreetingServiceGrpc.GreetingServiceBlockingStub client) {
+		this.client = client;
+	}
 
-    @GetMapping("/grpc")
-    Map<String, String> message() {
-        var request = GreetingRequest
-                .newBuilder()
-                .setName("Spring fans")
-                .build();
-        var msg = this.client.greet(request);
-        return Map.of("message", msg.getMessage());
-    }
+	@GetMapping("/grpc")
+	Map<String, String> message() {
+		var request = GreetingRequest.newBuilder().setName("Spring fans").build();
+		var msg = this.client.greet(request);
+		return Map.of("message", msg.getMessage());
+	}
 
 }

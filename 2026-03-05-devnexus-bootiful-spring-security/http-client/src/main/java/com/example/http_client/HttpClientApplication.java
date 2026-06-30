@@ -18,53 +18,48 @@ import static org.springframework.security.oauth2.client.web.ClientAttributes.cl
 @SpringBootApplication
 public class HttpClientApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(HttpClientApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(HttpClientApplication.class, args);
+	}
 
 }
-
 
 @Controller
 @ResponseBody
 class DefaultRestClientController {
 
-    private final RestClient restClient;
+	private final RestClient restClient;
 
-    private final RestClient interceptorRestClient;
+	private final RestClient interceptorRestClient;
 
-    DefaultRestClientController(OAuth2AuthorizedClientManager authorizedClientManager,
-                                RestClient.Builder restClient) {
-        this.restClient = restClient.build();
+	DefaultRestClientController(OAuth2AuthorizedClientManager authorizedClientManager, RestClient.Builder restClient) {
+		this.restClient = restClient.build();
 
-        this.interceptorRestClient = restClient
-                .requestInterceptor(new OAuth2ClientHttpRequestInterceptor(authorizedClientManager))
-                .build();
+		this.interceptorRestClient = restClient
+			.requestInterceptor(new OAuth2ClientHttpRequestInterceptor(authorizedClientManager))
+			.build();
 
-    }
+	}
 
-    record Response(String name) {
-    }
+	record Response(String name) {
+	}
 
-    @GetMapping("/interceptor")
-    Response interceptor () {
-        return this.interceptorRestClient
-                .get()
-                .uri("http://localhost:8085/rest")
-                .attributes(clientRegistrationId("spring"))
-                .retrieve()
-                .body(Response.class);
-    }
+	@GetMapping("/interceptor")
+	Response interceptor() {
+		return this.interceptorRestClient.get()
+			.uri("http://localhost:8085/rest")
+			.attributes(clientRegistrationId("spring"))
+			.retrieve()
+			.body(Response.class);
+	}
 
-    @GetMapping("/header")
-    Response header(@RegisteredOAuth2AuthorizedClient("spring") OAuth2AuthorizedClient authorizedClient) {
-        return this.restClient
-                .get()
-                .uri("http://localhost:8085/rest")
-                .headers(h -> h.setBearerAuth(
-                        authorizedClient.getAccessToken().getTokenValue()))
-                .retrieve()
-                .body(Response.class);
-    }
+	@GetMapping("/header")
+	Response header(@RegisteredOAuth2AuthorizedClient("spring") OAuth2AuthorizedClient authorizedClient) {
+		return this.restClient.get()
+			.uri("http://localhost:8085/rest")
+			.headers(h -> h.setBearerAuth(authorizedClient.getAccessToken().getTokenValue()))
+			.retrieve()
+			.body(Response.class);
+	}
 
 }

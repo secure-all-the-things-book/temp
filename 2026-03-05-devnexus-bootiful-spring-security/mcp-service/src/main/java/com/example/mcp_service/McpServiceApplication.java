@@ -20,17 +20,16 @@ import static org.springaicommunity.mcp.security.server.config.McpServerOAuth2Co
 @SpringBootApplication
 public class McpServiceApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(McpServiceApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(McpServiceApplication.class, args);
+	}
 
-    @Bean
-    Customizer<HttpSecurity> httpSecurityCustomizer(
-            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer
-    ) {
-        return http -> http
-                .with(mcpServerOAuth2(), a -> a.authorizationServer(issuer));
-    }
+	@Bean
+	Customizer<HttpSecurity> httpSecurityCustomizer(
+			@Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer) {
+		return http -> http.with(mcpServerOAuth2(), a -> a.authorizationServer(issuer));
+	}
+
 }
 
 record DogAdoptionSchedule(String dogName, Instant when, String user) {
@@ -39,13 +38,13 @@ record DogAdoptionSchedule(String dogName, Instant when, String user) {
 @Component
 class McpService {
 
-    @McpTool(description = "schedule an appointment to pick up or adopt a dog from a Pooch Palace location")
-    DogAdoptionSchedule scheduleAppointment(
-            @McpToolParam(description = "the name of the dog") String dogName) {
-        var security = Objects.requireNonNull(SecurityContextHolder.getContext()).getAuthentication();
-        var instant = Instant.now().plus(3, ChronoUnit.DAYS);
-        var dogAdoptionSchedule = new DogAdoptionSchedule(dogName, instant, Objects.requireNonNull(security).getName());
-        IO.println("==> " + dogAdoptionSchedule + " for " + dogName);
-        return dogAdoptionSchedule;
-    }
+	@McpTool(description = "schedule an appointment to pick up or adopt a dog from a Pooch Palace location")
+	DogAdoptionSchedule scheduleAppointment(@McpToolParam(description = "the name of the dog") String dogName) {
+		var security = Objects.requireNonNull(SecurityContextHolder.getContext()).getAuthentication();
+		var instant = Instant.now().plus(3, ChronoUnit.DAYS);
+		var dogAdoptionSchedule = new DogAdoptionSchedule(dogName, instant, Objects.requireNonNull(security).getName());
+		IO.println("==> " + dogAdoptionSchedule + " for " + dogName);
+		return dogAdoptionSchedule;
+	}
+
 }

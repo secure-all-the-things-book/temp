@@ -24,9 +24,9 @@ import java.util.UUID;
 @SpringBootApplication
 public class AmqpClientApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(AmqpClientApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(AmqpClientApplication.class, args);
+	}
 
 }
 
@@ -34,47 +34,44 @@ public class AmqpClientApplication {
 @ResponseBody
 class ClientController {
 
-    private final MessageChannel requests;
+	private final MessageChannel requests;
 
-    ClientController(MessageChannel requests) {
-        this.requests = requests;
-    }
+	ClientController(MessageChannel requests) {
+		this.requests = requests;
+	}
 
-    @GetMapping("/process")
-    Map<String, Object> begin(@RegisteredOAuth2AuthorizedClient("spring") OAuth2AuthorizedClient client) {
-        var token = client.getAccessToken().getTokenValue();
-        IO.println("token: " + token);
-        var message = MessageBuilder
-                .withPayload(Map.of("customerId", UUID.randomUUID().toString()))
-                .setHeader("jwt", token)
-                .build();
-        var sent = this.requests.send(message);
-        return Map.of("sent", sent);
-    }
+	@GetMapping("/process")
+	Map<String, Object> begin(@RegisteredOAuth2AuthorizedClient("spring") OAuth2AuthorizedClient client) {
+		var token = client.getAccessToken().getTokenValue();
+		IO.println("token: " + token);
+		var message = MessageBuilder.withPayload(Map.of("customerId", UUID.randomUUID().toString()))
+			.setHeader("jwt", token)
+			.build();
+		var sent = this.requests.send(message);
+		return Map.of("sent", sent);
+	}
+
 }
 
 @Configuration
 class EmailRequestsIntegrationFlowConfiguration {
 
-    private static final String DESTINATION_NAME = "emails";
+	private static final String DESTINATION_NAME = "emails";
 
-    @Bean
-    IntegrationFlow emailRequestsIntegrationFlow(
-            MessageChannel requests, AmqpTemplate template) {
+	@Bean
+	IntegrationFlow emailRequestsIntegrationFlow(MessageChannel requests, AmqpTemplate template) {
 
-        var outboundAmqpAdapter = Amqp
-                .outboundAdapter(template)
-                .routingKey(DESTINATION_NAME);
+		var outboundAmqpAdapter = Amqp.outboundAdapter(template).routingKey(DESTINATION_NAME);
 
-        return IntegrationFlow
-                .from(requests)// <2>
-                .transform(new ObjectToJsonTransformer()) // <3>
-                .handle(outboundAmqpAdapter) // <4>
-                .get();
-    }
+		return IntegrationFlow.from(requests)// <2>
+			.transform(new ObjectToJsonTransformer()) // <3>
+			.handle(outboundAmqpAdapter) // <4>
+			.get();
+	}
 
-    @Bean
-    DirectChannelSpec requests() {
-        return MessageChannels.direct();
-    }
+	@Bean
+	DirectChannelSpec requests() {
+		return MessageChannels.direct();
+	}
+
 }

@@ -26,39 +26,34 @@ public class GrpcServiceApplication {
 
 	@Bean
 	@GlobalServerInterceptor
-	AuthenticationProcessInterceptor authenticationProcessInterceptor(
-			GrpcSecurity grpcSecurity) throws Exception {
+	AuthenticationProcessInterceptor authenticationProcessInterceptor(GrpcSecurity grpcSecurity) throws Exception {
 		return grpcSecurity
-				.authorizeRequests(requests -> requests
-						.methods("GreetingService/Greet").authenticated()
-						.methods("grpc.*/*").permitAll()
-						.allRequests().denyAll()
-				)
-				.oauth2ResourceServer(c -> c.jwt(Customizer.withDefaults()))
-				.build();
+			.authorizeRequests(requests -> requests.methods("GreetingService/Greet")
+				.authenticated()
+				.methods("grpc.*/*")
+				.permitAll()
+				.allRequests()
+				.denyAll())
+			.oauth2ResourceServer(c -> c.jwt(Customizer.withDefaults()))
+			.build();
 	}
+
 }
 
-
 @Service
-class DefaultGreetingService extends
-		GreetingServiceGrpc.GreetingServiceImplBase {
+class DefaultGreetingService extends GreetingServiceGrpc.GreetingServiceImplBase {
 
-	private final SecurityContextHolderStrategy securityContextHolder =
-			SecurityContextHolder.getContextHolderStrategy();
+	private final SecurityContextHolderStrategy securityContextHolder = SecurityContextHolder
+		.getContextHolderStrategy();
 
 	@Override
 	public void greet(GreetingRequest request, StreamObserver<GreetingResponse> responseObserver) {
-		var authentication = this.securityContextHolder
-				.getContext().getAuthentication();
+		var authentication = this.securityContextHolder.getContext().getAuthentication();
 		var name = Objects.requireNonNull(authentication).getName();
 		var message = "Hello, " + name + "!";
-		var response = GreetingResponse
-				.newBuilder()
-				.setMessage(message)
-				.build();
+		var response = GreetingResponse.newBuilder().setMessage(message).build();
 		responseObserver.onNext(response);
 		responseObserver.onCompleted();
 	}
-}
 
+}
